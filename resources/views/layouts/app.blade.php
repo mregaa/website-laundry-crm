@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     @stack('styles')
 </head>
-<body class="bg-gray-100">
+<body class="min-h-screen flex flex-col bg-gray-100">
     <!-- Navigation -->
     <nav class="bg-blue-600 text-white shadow-lg">
         <div class="container mx-auto px-4">
@@ -34,9 +34,6 @@
                     </a>
                     <a href="{{ route('financial.index') }}" class="hover:bg-blue-700 px-3 py-2 rounded transition">
                         <i class="fas fa-dollar-sign"></i> Financial
-                    </a>
-                    <a href="{{ route('inventory.index') }}" class="hover:bg-blue-700 px-3 py-2 rounded transition">
-                        <i class="fas fa-boxes"></i> Inventory
                     </a>
                     <a href="{{ route('rewards.index') }}" class="hover:bg-blue-700 px-3 py-2 rounded transition">
                         <i class="fas fa-gift"></i> Rewards
@@ -91,12 +88,12 @@
     @endif
 
     <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
+    <main class="container mx-auto px-4 py-8 flex-1">
         @yield('content')
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 text-white mt-12">
+    <footer class="bg-gray-800 text-white mt-auto">
         <div class="container mx-auto px-4 py-6 text-center">
             <p>&copy; {{ date('Y') }} LaundryPro CRM System. All rights reserved.</p>
         </div>
