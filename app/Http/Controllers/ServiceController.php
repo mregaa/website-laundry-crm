@@ -45,6 +45,14 @@ class ServiceController extends Controller
     }
 
     /**
+     * Display the service.
+     */
+    public function show(Service $service)
+    {
+        return view('services.show', compact('service'));
+    }
+
+    /**
      * Show the form for editing the service.
      */
     public function edit(Service $service)
@@ -76,6 +84,11 @@ class ServiceController extends Controller
      */
     public function destroy(Service $service)
     {
+        // Check if service has been used in any orders
+        if ($service->orderItems()->count() > 0) {
+            return back()->with('error', 'Cannot delete service that has been used in orders. Please deactivate instead.');
+        }
+
         $service->delete();
 
         return redirect()->route('services.index')

@@ -11,16 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('services', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->text('description')->nullable();
-            $table->decimal('price', 10, 2);
-            $table->enum('unit', ['kg', 'piece', 'item', 'load'])->default('kg');
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-        });
-
         Schema::create('order_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('order_id')->constrained()->onDelete('cascade');
@@ -42,6 +32,5 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('order_items');
-        Schema::dropIfExists('services');
     }
 };

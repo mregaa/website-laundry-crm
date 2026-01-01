@@ -22,10 +22,12 @@ class DashboardController extends Controller
             'revenue' => Transaction::where('type', 'income')
                                    ->whereDate('transaction_date', today())
                                    ->sum('amount'),
-            'new_customers' => Customer::whereDate('created_at', today())->count(),
             'completed_orders' => Order::where('status', 'completed')
                                        ->whereDate('updated_at', today())
                                        ->count(),
+            'pending_payments' => Order::whereIn('payment_status', ['pending', 'partial'])
+                                       ->whereDate('created_at', today())
+                                       ->sum(DB::raw('total - paid_amount')),
         ];
 
         // This month's statistics
@@ -46,8 +48,21 @@ class DashboardController extends Controller
                                       ->count(),
         ];
 
-        $monthStats['profit'] = $monthStats['revenue'] - $monthStats['expenses'];
+        //last 30 days statistics
+        $last30DaysStats = [
+            'orders' => Order::where('created_at', '>=', now()->subDays(30))->count(),
+            'revenue' => Transaction::where('type', 'income')
+                                   ->where('transaction_date', '>=', now()->subDays(30))
+                                   ->sum('amount'),
+            'expenses' => Transaction::where('type', 'expense')
+                                    ->where('transaction_date', '>=', now()->subDays(30))
+                                    ->sum('amount'),
+            'new_customers' => Customer::where('created_at', '>=', now()->subDays(30))->count(),
+        ];
 
+        $monthStats['profit'] = $monthStats['revenue'] - $monthStats['expenses'];
+        $last30DaysStats['profit'] = $last30DaysStats['revenue'] - $last30DaysStats['expenses'];
+        
         // Order status distribution
         $ordersByStatus = Order::select('status', DB::raw('count(*) as count'))
             ->whereIn('status', ['received', 'washing', 'drying', 'ironing', 'ready'])
@@ -102,6 +117,7 @@ class DashboardController extends Controller
         return view('dashboard', compact(
             'todayStats',
             'monthStats',
+            'last30DaysStats',
             'ordersByStatus',
             'recentOrders',
             'pendingPayments',

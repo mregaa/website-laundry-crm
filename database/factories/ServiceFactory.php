@@ -20,7 +20,8 @@ class ServiceFactory extends Factory
             'name' => fake()->words(3, true),
             'description' => fake()->sentence(),
             'price' => fake()->randomFloat(2, 5, 50),
-            'unit' => fake()->randomElement(['kg', 'piece', 'item', 'load']),
+            'unit' => fake()->randomElement(['kg', 'item', 'bundle']),
+            'estimated_time' => fake()->numberBetween(30, 4320),
             'is_active' => true,
         ];
     }

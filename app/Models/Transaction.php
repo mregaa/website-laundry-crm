@@ -23,6 +23,7 @@ class Transaction extends Model
 
     protected $casts = [
         'transaction_date' => 'date',
+        'amount' => 'decimal:2',
     ];
 
     /**

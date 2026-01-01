@@ -34,16 +34,22 @@ class Payment extends Model
         });
 
         static::created(function ($payment) {
+            // Prevent duplicate updates - check if order's paid_amount already includes this payment
             $order = $payment->order;
-            $order->paid_amount += $payment->amount;
+            $totalPayments = $order->payments()->sum('amount');
             
-            if ($order->paid_amount >= $order->total) {
-                $order->payment_status = 'paid';
-            } elseif ($order->paid_amount > 0) {
-                $order->payment_status = 'partial';
+            // Only update if there's a discrepancy (shouldn't happen with proper controller logic)
+            if ($totalPayments != $order->paid_amount) {
+                $order->paid_amount = $totalPayments;
+                
+                if ($order->paid_amount >= $order->total) {
+                    $order->payment_status = 'paid';
+                } elseif ($order->paid_amount > 0) {
+                    $order->payment_status = 'partial';
+                }
+                
+                $order->save();
             }
-            
-            $order->save();
         });
     }
 

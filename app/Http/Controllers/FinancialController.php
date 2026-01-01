@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Transaction;
 use App\Models\Expense;
 use App\Models\Order;
+use App\Services\FinancialExportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -20,12 +21,12 @@ class FinancialController extends Controller
         $summary = [
             'total_income' => Transaction::where('type', 'income')
                 ->whereMonth('transaction_date', now()->month)
-                ->sum('amount'),
+                ->sum('amount') ?? 0,
             'total_expenses' => Transaction::where('type', 'expense')
                 ->whereMonth('transaction_date', now()->month)
-                ->sum('amount'),
+                ->sum('amount') ?? 0,
             'pending_payments' => Order::where('payment_status', '!=', 'paid')
-                ->sum(DB::raw('total - paid_amount')),
+                ->sum(DB::raw('total - paid_amount')) ?? 0,
         ];
         
         $transactions = Transaction::orderBy('transaction_date', 'desc')->paginate(20);
@@ -41,22 +42,22 @@ class FinancialController extends Controller
     {
         $query = Transaction::query();
 
-        if ($request->has('type')) {
+        if ($request->filled('type')) {
             $query->where('type', $request->type);
         }
 
-        if ($request->has('category')) {
+        if ($request->filled('category')) {
             $query->where('category', $request->category);
         }
 
-        if ($request->has('start_date') && $request->has('end_date')) {
+        if ($request->filled('start_date') && $request->filled('end_date')) {
             $query->whereBetween('transaction_date', [
                 $request->start_date,
                 $request->end_date
             ]);
         }
 
-        $transactions = $query->latest('transaction_date')->paginate(20);
+        $transactions = $query->latest('transaction_date')->paginate(20)->appends($request->all());
 
         return view('financial.transactions', compact('transactions'));
     }
@@ -68,18 +69,18 @@ class FinancialController extends Controller
     {
         $query = Expense::query();
 
-        if ($request->has('category')) {
+        if ($request->filled('category')) {
             $query->where('category', $request->category);
         }
 
-        if ($request->has('start_date') && $request->has('end_date')) {
+        if ($request->filled('start_date') && $request->filled('end_date')) {
             $query->whereBetween('expense_date', [
                 $request->start_date,
                 $request->end_date
             ]);
         }
 
-        $expenses = $query->latest('expense_date')->paginate(20);
+        $expenses = $query->latest('expense_date')->paginate(20)->appends($request->all());
 
         return view('financial.expenses', compact('expenses'));
     }
@@ -99,10 +100,10 @@ class FinancialController extends Controller
     {
         $validated = $request->validate([
             'category' => 'required|in:salary,utilities,supplies,maintenance,marketing,rent,equipment,transportation,other',
-            'amount' => 'required|numeric|min:0.01',
+            'amount' => 'required|numeric|min:0.01|max:999999999',
             'vendor' => 'nullable|string|max:255',
-            'description' => 'required|string',
-            'expense_date' => 'required|date',
+            'description' => 'required|string|max:1000',
+            'expense_date' => 'required|date|before_or_equal:today',
             'receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
@@ -131,11 +132,21 @@ class FinancialController extends Controller
      */
     public function report(Request $request)
     {
+        // Provide defaults if not provided
+        $defaultStartDate = now()->startOfMonth()->toDateString();
+        $defaultEndDate = now()->toDateString();
+        $defaultType = 'monthly';
+
         $validated = $request->validate([
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'type' => 'required|in:daily,weekly,monthly,custom',
+            'start_date' => 'nullable|date|before_or_equal:today',
+            'end_date' => 'nullable|date|after_or_equal:start_date|before_or_equal:today',
+            'type' => 'nullable|in:daily,weekly,monthly,custom',
         ]);
+
+        // Use defaults if not provided
+        $validated['start_date'] = $validated['start_date'] ?? $defaultStartDate;
+        $validated['end_date'] = $validated['end_date'] ?? $defaultEndDate;
+        $validated['type'] = $validated['type'] ?? $defaultType;
 
         $stats = $this->getFinancialStats($validated['start_date'], $validated['end_date']);
         
@@ -161,21 +172,21 @@ class FinancialController extends Controller
     {
         $totalIncome = Transaction::where('type', 'income')
             ->whereBetween('transaction_date', [$startDate, $endDate])
-            ->sum('amount');
+            ->sum('amount') ?? 0;
 
         $totalExpenses = Transaction::where('type', 'expense')
             ->whereBetween('transaction_date', [$startDate, $endDate])
-            ->sum('amount');
+            ->sum('amount') ?? 0;
 
         $profit = $totalIncome - $totalExpenses;
 
         $ordersRevenue = Order::where('payment_status', 'paid')
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->sum('total');
+            ->sum('total') ?? 0;
 
         $pendingPayments = Order::whereIn('payment_status', ['pending', 'partial'])
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->sum(DB::raw('total - paid_amount'));
+            ->sum(DB::raw('total - paid_amount')) ?? 0;
 
         return [
             'total_income' => $totalIncome,
@@ -185,5 +196,122 @@ class FinancialController extends Controller
             'pending_payments' => $pendingPayments,
             'profit_margin' => $totalIncome > 0 ? ($profit / $totalIncome) * 100 : 0,
         ];
+    }
+    
+    /**
+     * Export transactions to CSV.
+     */
+    public function exportTransactions(Request $request)
+    {
+        $query = Transaction::query();
+
+        if ($request->has('type') && $request->type) {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->has('category') && $request->category) {
+            $query->where('category', $request->category);
+        }
+
+        if ($request->has('start_date') && $request->has('end_date') && $request->start_date && $request->end_date) {
+            $query->whereBetween('transaction_date', [
+                $request->start_date,
+                $request->end_date
+            ]);
+        }
+
+        $transactions = $query->orderBy('transaction_date', 'desc')->get();
+
+        $filename = 'transaksi-' . date('Y-m-d') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($transactions) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Nomor Transaksi', 'Tanggal', 'Tipe', 'Kategori', 'Jumlah', 'Deskripsi']);
+
+            foreach ($transactions as $transaction) {
+                fputcsv($file, [
+                    $transaction->transaction_number,
+                    $transaction->transaction_date->format('Y-m-d'),
+                    $transaction->type,
+                    $transaction->category,
+                    $transaction->amount,
+                    $transaction->description,
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+    
+    /**
+     * Export expenses to CSV.
+     */
+    public function exportExpenses(Request $request)
+    {
+        $query = Expense::query();
+
+        if ($request->has('category') && $request->category) {
+            $query->where('category', $request->category);
+        }
+
+        if ($request->has('start_date') && $request->has('end_date') && $request->start_date && $request->end_date) {
+            $query->whereBetween('expense_date', [
+                $request->start_date,
+                $request->end_date
+            ]);
+        }
+
+        $expenses = $query->orderBy('expense_date', 'desc')->get();
+
+        $filename = 'pengeluaran-' . date('Y-m-d') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($expenses) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Tanggal', 'Kategori', 'Vendor', 'Jumlah', 'Deskripsi']);
+
+            foreach ($expenses as $expense) {
+                fputcsv($file, [
+                    $expense->expense_date->format('Y-m-d'),
+                    $expense->category,
+                    $expense->vendor ?? '-',
+                    $expense->amount,
+                    $expense->description,
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+    
+    /**
+     * Export financial report to Excel (.xlsx) with 3 sheets:
+     * 1. Ringkasan (Summary)
+     * 2. Transaksi Laundry (Transactions)
+     * 3. Pengeluaran (Expenses)
+     */
+    public function exportReport(Request $request)
+    {
+        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
+
+        $filename = 'laporan-keuangan-laundry-' . date('Y-m-d') . '.xlsx';
+        
+        $exportService = new FinancialExportService();
+        $spreadsheet = $exportService->generateReport($startDate, $endDate);
+        $exportService->export($spreadsheet, $filename);
     }
 }

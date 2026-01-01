@@ -1,0 +1,45 @@
+<?php
+
+return [
+    'required' => ':attribute harus diisi.',
+    'email' => ':attribute harus berupa alamat email yang valid.',
+    'unique' => ':attribute sudah digunakan.',
+    'min' => [
+        'string' => ':attribute minimal :min karakter.',
+        'numeric' => ':attribute minimal :min.',
+    ],
+    'max' => [
+        'string' => ':attribute maksimal :max karakter.',
+        'numeric' => ':attribute maksimal :max.',
+    ],
+    'numeric' => ':attribute harus berupa angka.',
+    'integer' => ':attribute harus berupa bilangan bulat.',
+    'date' => ':attribute harus berupa tanggal yang valid.',
+    'after_or_equal' => ':attribute harus tanggal setelah atau sama dengan :date.',
+    'in' => ':attribute yang dipilih tidak valid.',
+    'exists' => ':attribute yang dipilih tidak valid.',
+    'array' => ':attribute harus berupa array.',
+    'boolean' => ':attribute harus berupa true atau false.',
+    
+    'attributes' => [
+        'name' => 'Nama',
+        'email' => 'Email',
+        'phone' => 'Telepon',
+        'address' => 'Alamat',
+        'password' => 'Kata Sandi',
+        'description' => 'Deskripsi',
+        'price' => 'Harga',
+        'quantity' => 'Jumlah',
+        'category' => 'Kategori',
+        'status' => 'Status',
+        'amount' => 'Jumlah',
+        'customer_id' => 'Pelanggan',
+        'service_id' => 'Layanan',
+        'order_id' => 'Pesanan',
+        'payment_method' => 'Metode Pembayaran',
+        'pickup_date' => 'Tanggal Ambil',
+        'delivery_date' => 'Tanggal Kirim',
+        'expense_date' => 'Tanggal Pengeluaran',
+        'transaction_date' => 'Tanggal Transaksi',
+    ],
+];

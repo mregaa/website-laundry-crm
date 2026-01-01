@@ -14,7 +14,7 @@ class CustomerController extends Controller
     {
         $query = Customer::query();
 
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -23,13 +23,14 @@ class CustomerController extends Controller
             });
         }
 
-        if ($request->has('tier')) {
+        if ($request->filled('tier')) {
             $query->where('membership_tier', $request->tier);
         }
 
         $customers = $query->withCount('orders')
                           ->latest()
-                          ->paginate(15);
+                          ->paginate(15)
+                          ->appends($request->all());
 
         return view('customers.index', compact('customers'));
     }
@@ -71,14 +72,7 @@ class CustomerController extends Controller
             'loyaltyTransactions' => fn($q) => $q->latest()->limit(10)
         ]);
 
-        $stats = [
-            'total_orders' => $customer->orders()->count(),
-            'total_spent' => $customer->totalSpent(),
-            'pending_orders' => $customer->orders()->where('payment_status', '!=', 'paid')->count(),
-            'loyalty_points' => $customer->loyalty_points,
-        ];
-
-        return view('customers.show', compact('customer', 'stats'));
+        return view('customers.show', compact('customer'));
     }
 
     /**
@@ -113,6 +107,11 @@ class CustomerController extends Controller
      */
     public function destroy(Customer $customer)
     {
+        // Check if customer has orders
+        if ($customer->orders()->count() > 0) {
+            return back()->with('error', 'Cannot delete customer with existing orders. Please archive instead.');
+        }
+
         $customer->delete();
 
         return redirect()->route('customers.index')
@@ -127,17 +126,22 @@ class CustomerController extends Controller
         $validated = $request->validate([
             'action' => 'required|in:add,redeem',
             'points' => 'required|integer|min:1',
-            'description' => 'required|string',
+            'description' => 'required|string|max:500',
         ]);
 
         if ($validated['action'] === 'add') {
             $customer->addLoyaltyPoints($validated['points'], $validated['description']);
             $message = 'Loyalty points added successfully.';
         } else {
+            // Check if customer has sufficient points
+            if ($customer->loyalty_points < $validated['points']) {
+                return back()->with('error', "Insufficient loyalty points. Customer has {$customer->loyalty_points} points but tried to redeem {$validated['points']} points.");
+            }
+            
             $success = $customer->redeemLoyaltyPoints($validated['points'], $validated['description']);
-            $message = $success ? 'Loyalty points redeemed successfully.' : 'Insufficient loyalty points.';
+            $message = $success ? 'Loyalty points redeemed successfully.' : 'Failed to redeem points. Please try again.';
         }
 
-        return back()->with('success', $message);
+        return back()->with($success ?? true ? 'success' : 'error', $message);
     }
 }

@@ -64,6 +64,11 @@ class Customer extends Model
      */
     public function addLoyaltyPoints(int $points, string $description, ?int $orderId = null): void
     {
+        // Ensure points is positive
+        if ($points <= 0) {
+            return;
+        }
+
         $this->increment('loyalty_points', $points);
         
         $this->loyaltyTransactions()->create([
@@ -81,6 +86,12 @@ class Customer extends Model
      */
     public function redeemLoyaltyPoints(int $points, string $description, ?int $orderId = null): bool
     {
+        // Ensure points is positive
+        if ($points <= 0) {
+            return false;
+        }
+
+        // Check if customer has sufficient points
         if ($this->loyalty_points < $points) {
             return false;
         }
@@ -101,7 +112,7 @@ class Customer extends Model
     /**
      * Update membership tier based on loyalty points.
      */
-    protected function updateMembershipTier(): void
+    public function updateMembershipTier(): void
     {
         $tier = match (true) {
             $this->loyalty_points >= 5000 => 'platinum',

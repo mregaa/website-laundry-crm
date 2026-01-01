@@ -21,6 +21,7 @@ class Expense extends Model
 
     protected $casts = [
         'expense_date' => 'date',
+        'amount' => 'decimal:2',
     ];
 
     protected static function boot()

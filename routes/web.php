@@ -33,10 +33,13 @@ Route::post('rewards/{reward}/redeem', [RewardController::class, 'redeem'])->nam
 Route::prefix('financial')->name('financial.')->group(function () {
     Route::get('/', [FinancialController::class, 'index'])->name('index');
     Route::get('/transactions', [FinancialController::class, 'transactions'])->name('transactions');
+    Route::get('/transactions/export', [FinancialController::class, 'exportTransactions'])->name('transactions.export');
     Route::get('/expenses', [FinancialController::class, 'expenses'])->name('expenses');
     Route::get('/expenses/create', [FinancialController::class, 'createExpense'])->name('create-expense');
     Route::post('/expenses', [FinancialController::class, 'storeExpense'])->name('store-expense');
+    Route::get('/expenses/export', [FinancialController::class, 'exportExpenses'])->name('expenses.export');
     Route::get('/report', [FinancialController::class, 'report'])->name('report');
+    Route::get('/report/export', [FinancialController::class, 'exportReport'])->name('report.export');
 });
 
 // Inventory Management

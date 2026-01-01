@@ -26,6 +26,10 @@ class InventoryItem extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'quantity' => 'float',
+        'unit_price' => 'decimal:2',
+        'reorder_level' => 'decimal:2',
+        'max_stock_level' => 'decimal:2',
     ];
 
     /**
@@ -47,9 +51,14 @@ class InventoryItem extends Model
     /**
      * Add stock.
      */
-    public function addStock(float $quantity, string $referenceNumber = null, string $notes = null): void
+    public function addStock(float $quantity, ?string $referenceNumber = null, ?string $notes = null): void
     {
-        $this->quantity += $quantity;
+        // Ensure quantity is positive
+        if ($quantity <= 0) {
+            return;
+        }
+        
+        $this->quantity = $this->quantity + $quantity;
         $this->save();
 
         $this->inventoryTransactions()->create([
@@ -64,13 +73,18 @@ class InventoryItem extends Model
     /**
      * Remove stock.
      */
-    public function removeStock(float $quantity, string $type = 'stock_out', ?int $orderId = null, string $notes = null): bool
+    public function removeStock(float $quantity, string $type = 'stock_out', ?int $orderId = null, ?string $notes = null): bool
     {
+        // Ensure quantity is positive
+        if ($quantity <= 0) {
+            return false;
+        }
+        
         if ($this->quantity < $quantity) {
             return false;
         }
 
-        $this->quantity -= $quantity;
+        $this->quantity = $this->quantity - $quantity;
         $this->save();
 
         $this->inventoryTransactions()->create([

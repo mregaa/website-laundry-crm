@@ -12,6 +12,23 @@ class Order extends Model
 {
     use HasFactory, SoftDeletes;
 
+    // Status constants - centralized definition
+    const STATUS_IN_PROGRESS = 'in_progress';
+    const STATUS_READY = 'ready';
+    const STATUS_COMPLETED = 'completed';
+    const STATUS_CANCELLED = 'cancelled';
+
+    // Available statuses
+    public static function getStatuses(): array
+    {
+        return [
+            self::STATUS_IN_PROGRESS => 'Diproses',
+            self::STATUS_READY => 'Siap Diambil',
+            self::STATUS_COMPLETED => 'Selesai',
+            self::STATUS_CANCELLED => 'Dibatalkan',
+        ];
+    }
+
     protected $fillable = [
         'order_number',
         'customer_id',
@@ -33,6 +50,11 @@ class Order extends Model
         'pickup_date' => 'date',
         'delivery_date' => 'date',
         'express_service' => 'boolean',
+        'subtotal' => 'decimal:2',
+        'discount' => 'decimal:2',
+        'tax' => 'decimal:2',
+        'total' => 'decimal:2',
+        'paid_amount' => 'decimal:2',
     ];
 
     protected static function boot()
@@ -50,24 +72,7 @@ class Order extends Model
                 $order->statusHistories()->create([
                     'status' => $order->status,
                     'changed_at' => now(),
-                    'changed_by' => auth()->id(),
                 ]);
-            }
-
-            if ($order->payment_status === 'paid' && $order->wasChanged('payment_status')) {
-                Transaction::create([
-                    'transaction_number' => 'TXN-' . date('Ymd') . '-' . str_pad(Transaction::whereDate('created_at', today())->count() + 1, 4, '0', STR_PAD_LEFT),
-                    'type' => 'income',
-                    'category' => 'order_payment',
-                    'amount' => $order->total,
-                    'order_id' => $order->id,
-                    'transaction_date' => now(),
-                    'description' => "Payment for order {$order->order_number}",
-                ]);
-
-                // Award loyalty points (1 point per 10 units of currency)
-                $points = floor($order->total / 10);
-                $order->customer->addLoyaltyPoints($points, "Order {$order->order_number}", $order->id);
             }
         });
     }
@@ -126,11 +131,16 @@ class Order extends Model
     public function calculateTotal(): float
     {
         $subtotal = $this->calculateSubtotal();
-        $this->subtotal = $subtotal;
-        $this->tax = $subtotal * 0.1; // 10% tax
-        $this->total = $subtotal - $this->discount + $this->tax;
+        $discount = (float)($this->discount ?? 0);
+        $taxableAmount = $subtotal - $discount;
+        $tax = round($taxableAmount * 0.1, 2);
+        $total = round($subtotal - $discount + $tax, 2);
         
-        return $this->total;
+        $this->setAttribute('subtotal', $subtotal);
+        $this->setAttribute('tax', $tax);
+        $this->setAttribute('total', $total);
+        
+        return $total;
     }
 
     /**
@@ -149,5 +159,78 @@ class Order extends Model
     public function getRemainingBalance(): float
     {
         return max(0, $this->total - $this->paid_amount);
+    }
+
+    /**
+     * Normalize phone number for WhatsApp.
+     * Converts Indonesian phone format to international format without + sign.
+     */
+    public function normalizedWhatsappPhone(): ?string
+    {
+        $phone = $this->customer->phone ?? null;
+        
+        if (empty($phone)) {
+            return null;
+        }
+
+        // Strip all non-numeric characters
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+
+        // Convert Indonesian format starting with 0 to 62
+        if (substr($phone, 0, 1) === '0') {
+            $phone = '62' . substr($phone, 1);
+        }
+
+        // Ensure it starts with 62 (Indonesian country code)
+        if (substr($phone, 0, 2) !== '62') {
+            return null;
+        }
+
+        return $phone;
+    }
+
+    /**
+     * Generate WhatsApp message for ready order.
+     */
+    public function whatsappMessage(): string
+    {
+        $customerName = $this->customer->name ?? 'Pelanggan';
+        $orderNumber = $this->order_number;
+        $amount = rupiah($this->total);
+        
+        // Get payment status in Indonesian
+        $paymentStatusMap = [
+            'pending' => 'belum dibayar',
+            'partial' => 'dibayar sebagian',
+            'paid' => 'lunas',
+            'refunded' => 'dikembalikan',
+        ];
+        $paymentStatus = $paymentStatusMap[$this->payment_status] ?? $this->payment_status;
+
+        return "Halo {$customerName},\n\n"
+            . "Kami informasikan bahwa pesanan laundry Anda sudah *SELESAI* dan *SIAP DIAMBIL*\n\n"
+            . "No. Pesanan : {$orderNumber}\n"
+            . "Nama        : {$customerName}\n"
+            . "Total       : {$amount} ({$paymentStatus})\n"
+            . "Status      : Siap diambil\n\n"
+            . "Silakan datang ke outlet kami untuk mengambil pesanan Anda.\n"
+            . "Terima kasih telah mempercayakan laundry Anda kepada kami";
+    }
+
+    /**
+     * Generate WhatsApp Click-to-Chat URL.
+     */
+    public function whatsappUrl(): ?string
+    {
+        $phone = $this->normalizedWhatsappPhone();
+
+        if (empty($phone)) {
+            return null;
+        }
+
+        $message = $this->whatsappMessage();
+        $encodedMessage = urlencode($message);
+
+        return "https://wa.me/{$phone}?text={$encodedMessage}";
     }
 }

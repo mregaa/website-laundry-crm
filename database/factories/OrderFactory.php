@@ -19,7 +19,7 @@ class OrderFactory extends Factory
     {
         return [
             'customer_id' => Customer::factory(),
-            'status' => fake()->randomElement(['received', 'washing', 'drying', 'ironing', 'ready', 'completed']),
+            'status' => fake()->randomElement(['in_progress', 'ready', 'completed', 'cancelled']),
             'payment_status' => fake()->randomElement(['pending', 'partial', 'paid']),
             'subtotal' => $subtotal = fake()->randomFloat(2, 20, 500),
             'discount' => $discount = fake()->randomFloat(2, 0, 50),

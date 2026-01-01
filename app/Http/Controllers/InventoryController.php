@@ -42,14 +42,14 @@ class InventoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|unique:inventory_items,sku',
-            'description' => 'nullable|string',
+            'sku' => 'required|string|max:100|unique:inventory_items,sku',
+            'description' => 'nullable|string|max:1000',
             'category' => 'required|in:detergent,fabric_softener,bleach,starch,hangers,bags,other',
-            'quantity' => 'required|numeric|min:0',
-            'unit' => 'required|string',
-            'unit_price' => 'required|numeric|min:0',
-            'reorder_level' => 'required|numeric|min:0',
-            'max_stock_level' => 'nullable|numeric|min:0',
+            'quantity' => 'required|numeric|min:0|max:999999',
+            'unit' => 'required|string|max:50',
+            'unit_price' => 'required|numeric|min:0|max:999999',
+            'reorder_level' => 'required|numeric|min:0|max:999999',
+            'max_stock_level' => 'nullable|numeric|min:0|max:999999',
         ]);
 
         InventoryItem::create($validated);
@@ -83,13 +83,13 @@ class InventoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|unique:inventory_items,sku,' . $inventory->id,
-            'description' => 'nullable|string',
+            'sku' => 'required|string|max:100|unique:inventory_items,sku,' . $inventory->id,
+            'description' => 'nullable|string|max:1000',
             'category' => 'required|in:detergent,fabric_softener,bleach,starch,hangers,bags,other',
-            'unit' => 'required|string',
-            'unit_price' => 'required|numeric|min:0',
-            'reorder_level' => 'required|numeric|min:0',
-            'max_stock_level' => 'nullable|numeric|min:0',
+            'unit' => 'required|string|max:50',
+            'unit_price' => 'required|numeric|min:0|max:999999',
+            'reorder_level' => 'required|numeric|min:0|max:999999',
+            'max_stock_level' => 'nullable|numeric|min:0|max:999999',
             'is_active' => 'boolean',
         ]);
 
@@ -106,10 +106,24 @@ class InventoryController extends Controller
     {
         $validated = $request->validate([
             'type' => 'required|in:stock_in,stock_out,adjustment',
-            'quantity' => 'required|numeric|min:0.01',
-            'reference_number' => 'nullable|string',
-            'notes' => 'nullable|string',
+            'quantity' => 'required|numeric|min:0.01|max:999999',
+            'reference_number' => 'nullable|string|max:100',
+            'notes' => 'nullable|string|max:500',
         ]);
+
+        // Prevent negative stock for stock_out operations
+        if ($validated['type'] === 'stock_out') {
+            if ($inventory->quantity < $validated['quantity']) {
+                return back()->with('error', 'Insufficient stock. Available: ' . $inventory->quantity . ' ' . $inventory->unit);
+            }
+        }
+        
+        // Prevent exceeding max stock level for stock_in
+        if (($validated['type'] === 'stock_in' || $validated['type'] === 'adjustment') && $inventory->max_stock_level) {
+            if (($inventory->quantity + $validated['quantity']) > $inventory->max_stock_level) {
+                return back()->with('warning', 'Adding this quantity will exceed maximum stock level of ' . $inventory->max_stock_level . ' ' . $inventory->unit);
+            }
+        }
 
         if ($validated['type'] === 'stock_in' || $validated['type'] === 'adjustment') {
             $inventory->addStock(
@@ -125,7 +139,12 @@ class InventoryController extends Controller
                 null,
                 $validated['notes'] ?? null
             );
-            $message = $success ? 'Stock removed successfully.' : 'Insufficient stock.';
+            
+            if (!$success) {
+                return back()->with('error', 'Insufficient stock. Available: ' . $inventory->quantity . ' ' . $inventory->unit);
+            }
+            
+            $message = 'Stock removed successfully.';
         }
 
         return back()->with('success', $message);
@@ -136,6 +155,11 @@ class InventoryController extends Controller
      */
     public function destroy(InventoryItem $inventory)
     {
+        // Check if inventory has transactions
+        if ($inventory->inventoryTransactions()->count() > 0) {
+            return back()->with('error', 'Cannot delete inventory item with transaction history. Please deactivate instead.');
+        }
+
         $inventory->delete();
 
         return redirect()->route('inventory.index')

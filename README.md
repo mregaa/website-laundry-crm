@@ -1,445 +1,423 @@
-# LaundryPro CRM System
+# Website Laundry CRM
 
-A comprehensive web application built with Laravel for managing laundry business operations, including CRM, order management, financial tracking, and inventory management.
+Aplikasi web berbasis Laravel untuk mengelola operasional bisnis laundry secara menyeluruh, mencakup manajemen order, customer, keuangan, inventory, dan program loyalitas.
 
-## Features
+## 📋 Gambaran Aplikasi
 
-### 1. Customer Relationship Management (CRM)
-- **Customer Management**: Add, edit, view, and delete customer records
-- **Customer Profiles**: Store name, contact details, address, birthdate
-- **Loyalty Program**: 
-  - Automatic points accumulation (1 point per $10 spent)
-  - Tiered membership system (Bronze, Silver, Gold, Platinum)
-  - Point redemption for rewards
-  - Transaction history tracking
-- **Customer Analytics**: Total orders, spending history, pending orders
+Aplikasi ini dirancang untuk membantu pemilik dan staff laundry dalam mengelola operasional bisnis sehari-hari, mulai dari pencatatan order, tracking status laundry, notifikasi WhatsApp ke customer, pencatatan keuangan (pemasukan & pengeluaran), manajemen inventory, hingga program loyalitas pelanggan.
 
-### 2. Laundry Order Management
-- **Order Creation**: Create orders with multiple service items
-- **Order Tracking**: Real-time status updates through workflow stages:
-  - Received → Sorting → Washing → Drying → Ironing → Folding → Ready → Out for Delivery → Completed
-- **Status History**: Track all status changes with timestamps
-- **Express Service**: Option for priority processing
+**Role Pengguna:**
+- **Admin/Owner**: Akses penuh ke semua fitur termasuk laporan keuangan dan manajemen data master
+- **Staff/Kasir**: Fokus pada operasional harian seperti input order, update status, dan pembayaran
+
+## ✨ Fitur Utama
+
+### 1. Dashboard Statistik
+- **Statistik Hari Ini**: Total order, revenue, order selesai, pembayaran pending
+- **Statistik Bulan Ini**: Total order, revenue, expenses, profit, customer baru
+- **Statistik 30 Hari Terakhir**: Tren order, revenue, expenses, dan profit
+- **Order Status Distribution**: Visualisasi order berdasarkan status
+- **Recent Orders**: Daftar 10 order terbaru
+- **Pending Payments**: Order dengan pembayaran belum lunas
+- **Low Stock Alert**: Item inventory yang stoknya menipis
+- **Top Customers**: 5 pelanggan dengan transaksi terbesar bulan ini
+
+### 2. Manajemen Order Laundry
+- **Create Order**: Buat order baru dengan multiple service items
+- **Order Tracking**: Pencarian order berdasarkan nomor order atau nama customer
+- **Status Order Disederhanakan** (Major Stages):
+  - **In Progress**: Order sedang dikerjakan (mencakup proses cuci, keringkan, setrika, dll)
+  - **Ready**: Order siap diambil customer ✅
+  - **Completed**: Order telah diambil dan selesai
+  - **Cancelled**: Order dibatalkan
+- **WhatsApp Click-to-Chat**: 
+  - Tombol WhatsApp otomatis muncul ketika status = **ready**
+  - Mengirim template pesan "Pesanan Anda sudah SELESAI dan SIAP DIAMBIL"
+  - Format: No. Pesanan, Nama, Total (status pembayaran), Status
+  - **Tidak menggunakan WhatsApp Business API**, hanya link wa.me
 - **Payment Tracking**: 
-  - Multiple payment methods (Cash, Card, Bank Transfer, E-wallet)
-  - Partial payment support
-  - Payment history
-- **Order Search**: Search by order number or customer name
-- **Automatic Numbering**: Auto-generated order numbers (ORD-YYYYMMDD-XXXX)
+  - Status pembayaran: pending, partial, paid, refunded
+  - Tambah pembayaran dengan berbagai metode (Cash, Transfer, E-wallet)
+  - Histori pembayaran per order
+- **Order Status History**: Catat setiap perubahan status dengan timestamp dan user
+- **Express Service**: Opsi layanan kilat (jika diaktifkan)
+- **Auto-Generated Order Number**: Format ORD-YYYYMMDD-XXXX
 
-### 3. Financial Management
-- **Transaction Tracking**: 
-  - Automatic transaction creation for order payments
-  - Expense recording with categories
-  - Transaction categories (Order Payment, Salary, Utilities, Supplies, etc.)
+### 3. Manajemen Customer & Loyalty
+- **Customer Profiles**: Data lengkap customer (nama, telepon, email, alamat, tanggal lahir)
+- **Loyalty Program**:
+  - Akumulasi poin otomatis dari transaksi
+  - Membership tier: Bronze, Silver, Gold, Platinum
+  - Loyalty Transactions: Riwayat poin earned, redeemed, expired
+  - Customer Rewards: Redeem poin untuk diskon atau hadiah
+- **Customer Analytics**: Total spending, jumlah order, poin loyalty
+
+### 4. Manajemen Service (Price List)
+- **Service Catalog**: Daftar layanan laundry (Cuci Kering, Cuci Setrika, Setrika Saja, dll)
+- **Flexible Pricing**: Harga berdasarkan satuan (kg, item, bundle)
+- **Estimated Time**: Durasi estimasi pengerjaan (dalam menit)
+- **Service Status**: Aktif/Non-aktif untuk ditampilkan di order form
+
+### 5. Manajemen Inventory
+- **Inventory Items**: Catat stok bahan operasional (detergent, softener, bleach, plastic bags, hangers, dll)
+- **Kategori**: Detergent, Fabric Softener, Bleach, Starch, Hangers, Bags, Other
+- **Stock Management**: Quantity, satuan (kg/L/pcs), reorder level, supplier
+- **Inventory Transactions**: 
+  - **Stock In**: Pembelian atau penambahan stok
+  - **Stock Out**: Pengurangan stok manual
+  - **Usage**: Pemakaian untuk order (otomatis)
+  - **Adjustment**: Koreksi stok
+- **Low Stock Alert**: Notifikasi di dashboard jika stok <= reorder level
+
+### 6. Manajemen Keuangan (Financial)
+- **Transactions**: 
+  - **Income**: Transaksi pemasukan (otomatis dari pembayaran order)
+  - **Expense**: Transaksi pengeluaran
+  - Kategori: Order Payment, Salary, Utilities, Supplies, Maintenance, Marketing, Rent, Equipment, Transportation, Other
+  - Auto-Generated Transaction Number: TRX-YYYYMMDD-XXXX
+- **Expenses**: 
+  - Input pengeluaran operasional (gaji, PLN, PDAM, supplies, dll)
+  - Kategori lengkap sesuai kebutuhan bisnis
+  - Expense Number: EXP-YYYYMMDD-XXXX
 - **Financial Reports**:
-  - Daily, weekly, monthly revenue reports
-  - Expense breakdown by category
-  - Profit/loss calculations
-  - Revenue trends visualization
-- **Payment Management**:
-  - Record partial and full payments
-  - Track payment methods
-  - Outstanding balance tracking
+  - Filter berdasarkan periode (tanggal mulai - tanggal akhir)
+  - Revenue, Expenses, Profit/Loss
+  - Export ke Excel/PDF (jika tersedia)
 
-### 4. Service Management
-- **Service Catalog**: Define laundry services with pricing
-- **Flexible Pricing**: Price per kg, piece, item, or load
-- **Service Status**: Activate/deactivate services
-- **Service Types**: 
-  - Wash & Fold
-  - Wash & Iron
-  - Dry Cleaning
-  - Ironing Only
-  - Comforter Cleaning
-  - Curtain Cleaning
+### 7. Program Rewards (Loyalty)
+- **Reward Catalog**: Daftar reward yang bisa ditukar dengan poin
+- **Points Required**: Minimal poin untuk redeem
+- **Reward Value**: Nilai diskon dalam rupiah
+- **Redeem Reward**: Customer menukar poin dengan reward
+- **Reward Status**: Available, Redeemed, Expired
 
-### 5. Inventory Management
-- **Stock Tracking**: Monitor inventory levels for supplies
-- **Low Stock Alerts**: Automatic alerts when stock reaches reorder level
-- **Inventory Categories**:
-  - Detergent
-  - Fabric Softener
-  - Bleach
-  - Starch
-  - Hangers
-  - Bags
-  - Other supplies
-- **Stock Adjustments**: Record stock in, stock out, and adjustments
-- **Transaction History**: Track all inventory movements
-- **SKU Management**: Unique SKU codes for each item
+## 🔄 Flow Operasional (End-to-End)
 
-### 6. Rewards System
-- **Reward Management**: Create and manage reward programs
-- **Point-Based Redemption**: Customers redeem points for rewards
-- **Flexible Rewards**: Percentage or fixed amount discounts
-- **Reward Expiration**: Set expiration dates for redeemed rewards
-- **Usage Tracking**: Track when rewards are used
+### Alur Kerja Standar:
 
-### 7. Dashboard & Analytics
-- **Real-Time Statistics**:
-  - Today's orders, revenue, new customers
-  - Monthly totals and profit
-  - Order status distribution
-- **Visual Analytics**:
-  - Revenue trends (7-day chart)
-  - Top customers ranking
-  - Low stock items alert
-  - Overdue orders warning
-- **Quick Actions**: Access to recent orders and pending payments
+1. **Customer datang / telepon / chat** → Staff catat data customer (jika baru)
 
-## Technology Stack
+2. **Buat Order Baru** (`orders.create`)
+   - Pilih customer
+   - Tambah service items (jenis layanan + quantity)
+   - Sistem hitung subtotal, tax (10%), diskon (opsional), total
+   - Tentukan pickup date & delivery date
+   - Status awal: **In Progress**
 
-- **Framework**: Laravel 12.x
-- **PHP**: 8.2+
-- **Database**: MySQL/PostgreSQL/SQLite
-- **Frontend**: 
-  - Blade Templates
-  - Tailwind CSS (via CDN)
-  - Font Awesome Icons
-  - Vanilla JavaScript
-- **Authentication**: Laravel built-in authentication (expandable)
+3. **Proses Laundry** (Status: **In Progress**)
+   - Laundry dikerjakan melalui tahapan: terima → sortir → cuci → keringkan → setrika → lipat
+   - Staff tidak perlu update status detail, cukup tetap di **In Progress** sampai selesai
 
-## Installation
+4. **Order Siap Diambil** (Status: **Ready**)
+   - Setelah laundry selesai dikemas, staff update status ke **Ready**
+   - **Tombol WhatsApp muncul otomatis** di halaman detail order
+   - Staff klik tombol WhatsApp → Template pesan otomatis terisi
+   - Kirim pesan WA ke customer: "Pesanan Anda sudah SELESAI dan SIAP DIAMBIL"
+
+5. **Pembayaran**
+   - Customer datang ambil laundry
+   - Staff input/cek pembayaran (`orders.add-payment`)
+   - Sistem otomatis membuat **Transaction** dengan type=income ketika payment dibuat
+   - Payment status: pending → partial → **paid**
+
+6. **Order Selesai** (Status: **Completed**)
+   - Setelah customer ambil laundry dan bayar lunas, update status ke **Completed**
+   - Order selesai dan tercatat dalam histori
+
+### Catatan Penting:
+- **Data statistik dashboard** berasal dari tabel `transactions` (income/expense) dan filter tanggal
+- **Revenue** dihitung dari transaksi type=income (bukan langsung dari total order)
+- **WhatsApp** bersifat semi-auto: template otomatis, tapi staff yang klik send via wa.me (tanpa API)
+
+## 💻 Instalasi & Setup (Local Development)
 
 ### Prerequisites
-- PHP 8.2 or higher
+- PHP 8.2+ 
 - Composer
-- MySQL/PostgreSQL/SQLite
-- Node.js & NPM (optional, for asset compilation)
+- MySQL 5.7+ / MariaDB 10.3+
+- Web server (Apache/Nginx) atau gunakan built-in PHP server
 
-### Step 1: Clone or Navigate to Project
+### Langkah Instalasi:
+
+#### 1. Clone Repository (jika dari Git)
 ```bash
-cd "Website Laundry/laundry-crm"
+git clone https://github.com/mregaa/website-laundry-crm.git
+cd website-laundry-crm
 ```
 
-### Step 2: Install Dependencies
+#### 2. Install Dependencies
 ```bash
 composer install
 ```
 
-### Step 3: Environment Configuration
+#### 3. Setup Environment
 ```bash
+# Copy file .env
+copy .env.example .env
+# atau di Linux/Mac
 cp .env.example .env
 ```
 
-Edit `.env` file and configure your database:
+Edit file `.env` dan sesuaikan database configuration:
 ```env
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=laundry_crm
-DB_USERNAME=your_username
-DB_PASSWORD=your_password
+DB_USERNAME=root
+DB_PASSWORD=
 ```
 
-For development, you can use SQLite:
-```env
-DB_CONNECTION=sqlite
-# DB_HOST, DB_PORT, DB_DATABASE, etc. can be commented out
-```
-
-### Step 4: Generate Application Key
+#### 4. Generate Application Key
 ```bash
 php artisan key:generate
 ```
 
-### Step 5: Run Migrations
-```bash
-php artisan migrate
+#### 5. Buat Database
+Buat database MySQL dengan nama sesuai `DB_DATABASE` di `.env`:
+```sql
+CREATE DATABASE laundry_crm;
 ```
 
-### Step 6: Seed Database (Optional)
+#### 6. Run Migration & Seeder
 ```bash
-php artisan db:seed
+# Jalankan migration dan seeder sekaligus
+php artisan migrate:fresh --seed
 ```
 
-This will create:
-- 6 sample services
-- 3 reward programs
-- 6 inventory items
-- 5 sample customers
-- 1 sample order
+**Seeder `RealCaseIndonesiaSeeder` akan generate:**
+- 2 Users (admin dan kasir)
+- 12 Customers dengan nama Indonesia
+- 9 Services (Cuci Kering, Cuci Setrika, dll)
+- 35 Orders dengan berbagai status
+- 92 Order Items
+- 32 Payments
+- 40 Transactions (income & expense)
+- 12 Expenses (PLN, PDAM, Gaji, dll)
+- 12 Inventory Items (Detergent, Softener, Bags, dll)
+- 57 Inventory Transactions
+- 16 Loyalty Transactions
+- 10 Customer Rewards
+- 6 Rewards
+- 78 Order Status Histories
 
-### Step 7: Create Storage Link
+**Data Login Default:**
+- Email: `admin@laundry.id` | Password: `password`
+- Email: `kasir@laundry.id` | Password: `password`
+
+#### 7. (Opsional) Clear Cache
 ```bash
-php artisan storage:link
+php artisan config:clear
+php artisan cache:clear
+php artisan view:clear
 ```
 
-### Step 8: Start Development Server
+## 🚀 Menjalankan Aplikasi
+
+### Untuk Development di Laptop/PC:
+
 ```bash
 php artisan serve
 ```
 
-Visit `http://localhost:8000` in your browser.
+Akses di browser: `http://127.0.0.1:8000` atau `http://localhost:8000`
 
-## Database Schema
+### Untuk Akses dari HP (Mobile Testing):
 
-### Core Tables
-- `customers` - Customer information and loyalty data
-- `orders` - Order records with status and payment tracking
-- `order_items` - Individual services within orders
-- `services` - Available laundry services
-- `order_status_histories` - Status change tracking
-- `payments` - Payment records for orders
-- `transactions` - All financial transactions
-- `expenses` - Business expenses
-- `loyalty_transactions` - Loyalty point movements
-- `rewards` - Available rewards
-- `customer_rewards` - Redeemed rewards
-- `inventory_items` - Inventory stock items
-- `inventory_transactions` - Stock movements
+Agar aplikasi bisa diakses dari HP yang terhubung ke Wi-Fi yang sama dengan laptop:
 
-## Usage Guide
-
-### Managing Customers
-1. Navigate to **Customers** menu
-2. Click **Add Customer** to create new customer
-3. Fill in required information (Name, Phone)
-4. Optional: Add email, address, birthdate
-5. View customer details to see order history and loyalty points
-
-### Creating Orders
-1. Navigate to **Orders** → **Create Order**
-2. Select customer from dropdown
-3. Add order items (service + quantity)
-4. Set pickup and delivery dates
-5. Add special instructions if needed
-6. Click **Create Order**
-
-### Tracking Orders
-1. Navigate to **Orders**
-2. Click on order number to view details
-3. Update status using the status dropdown
-4. Add payments as received
-5. View complete status history
-
-### Managing Inventory
-1. Navigate to **Inventory**
-2. Monitor current stock levels
-3. Click **Adjust Stock** to add or remove stock
-4. View transaction history for each item
-5. Dashboard shows low stock alerts automatically
-
-### Financial Reports
-1. Navigate to **Financial**
-2. Select date range
-3. View income, expenses, and profit
-4. Generate detailed reports
-5. Export data for accounting purposes
-
-### Rewards Management
-1. Navigate to **Rewards**
-2. Create new reward programs
-3. Set points required and discount amount
-4. Customers can redeem in their profile
-
-## Testing
-
-### Run Unit Tests
+#### 1. Jalankan server dengan IP 0.0.0.0
 ```bash
-php artisan test
+php artisan serve --host=0.0.0.0 --port=8000
 ```
 
-### Run Specific Test
+#### 2. Cari IP Address Laptop
+**Windows:**
 ```bash
-php artisan test --filter CustomerTest
+ipconfig
 ```
+Cari **IPv4 Address** di adapter Wi-Fi (contoh: `192.168.1.5`)
 
-## Deployment
-
-### Production Checklist
-1. Set `APP_ENV=production` in `.env`
-2. Set `APP_DEBUG=false`
-3. Generate new application key
-4. Configure production database
-5. Run migrations: `php artisan migrate --force`
-6. Optimize application:
-   ```bash
-   php artisan config:cache
-   php artisan route:cache
-   php artisan view:cache
-   ```
-7. Set appropriate file permissions
-8. Configure web server (Apache/Nginx)
-
-### Environment Variables for Production
-```env
-APP_NAME="LaundryPro"
-APP_ENV=production
-APP_KEY=base64:your-generated-key
-APP_DEBUG=false
-APP_URL=https://yourdomain.com
-
-DB_CONNECTION=mysql
-DB_HOST=your-db-host
-DB_PORT=3306
-DB_DATABASE=your-db-name
-DB_USERNAME=your-db-user
-DB_PASSWORD=your-db-password
-
-MAIL_MAILER=smtp
-MAIL_HOST=your-mail-host
-MAIL_PORT=587
-MAIL_USERNAME=your-email
-MAIL_PASSWORD=your-password
-MAIL_ENCRYPTION=tls
-```
-
-### Web Server Configuration
-
-#### Nginx Example
-```nginx
-server {
-    listen 80;
-    server_name yourdomain.com;
-    root /path/to/laundry-crm/public;
-
-    add_header X-Frame-Options "SAMEORIGIN";
-    add_header X-Content-Type-Options "nosniff";
-
-    index index.php;
-
-    charset utf-8;
-
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
-
-    location = /favicon.ico { access_log off; log_not_found off; }
-    location = /robots.txt  { access_log off; log_not_found off; }
-
-    error_page 404 /index.php;
-
-    location ~ \.php$ {
-        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
-        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
-        include fastcgi_params;
-    }
-
-    location ~ /\.(?!well-known).* {
-        deny all;
-    }
-}
-```
-
-#### Apache Example
-```apache
-<VirtualHost *:80>
-    ServerName yourdomain.com
-    DocumentRoot /path/to/laundry-crm/public
-
-    <Directory /path/to/laundry-crm/public>
-        AllowOverride All
-        Require all granted
-    </Directory>
-
-    ErrorLog ${APACHE_LOG_DIR}/laundry-error.log
-    CustomLog ${APACHE_LOG_DIR}/laundry-access.log combined
-</VirtualHost>
-```
-
-## API Endpoints (Future Enhancement)
-
-The application is structured to easily add RESTful API endpoints:
-- `/api/customers` - Customer CRUD
-- `/api/orders` - Order management
-- `/api/services` - Service catalog
-- `/api/inventory` - Inventory tracking
-
-## Security Features
-
-- CSRF protection on all forms
-- SQL injection prevention via Eloquent ORM
-- XSS protection via Blade templating
-- Password hashing (if authentication added)
-- Input validation on all forms
-- Soft deletes for data recovery
-
-## Performance Optimization
-
-- Database indexing on frequently queried columns
-- Eager loading to prevent N+1 queries
-- Query optimization with proper relationships
-- Caching support (ready to implement)
-
-## Customization
-
-### Adding New Order Status
-Edit `Order` model and migration:
-```php
-'status' => 'required|in:received,sorting,washing,drying,ironing,folding,ready,out_for_delivery,completed,cancelled,your_new_status'
-```
-
-### Adding New Payment Method
-Edit `Transaction` and `Payment` models:
-```php
-'payment_method' => 'required|in:cash,card,bank_transfer,e-wallet,your_new_method'
-```
-
-### Customizing Loyalty Points
-Edit `Customer` model's `addLoyaltyPoints` method:
-```php
-$points = floor($order->total / 10); // Change ratio here
-```
-
-## Troubleshooting
-
-### Database Connection Error
-- Verify database credentials in `.env`
-- Ensure database exists
-- Check database server is running
-
-### Permission Errors
+**Linux/Mac:**
 ```bash
-chmod -R 775 storage bootstrap/cache
-chown -R www-data:www-data storage bootstrap/cache
+ifconfig
+# atau
+ip addr show
 ```
 
-### Composer Install Fails
+#### 3. Akses dari HP
+Buka browser di HP, ketik:
+```
+http://192.168.1.5:8000
+```
+*(Ganti `192.168.1.5` dengan IP laptop Anda)*
+
+#### 4. Troubleshooting Firewall (jika tidak bisa akses)
+**Windows:**
+- Buka **Windows Defender Firewall** → Advanced Settings
+- Inbound Rules → New Rule → Port → TCP → 8000 → Allow
+- Atau temporary: `netsh advfirewall set allprofiles state off` (tidak direkomendasikan untuk production)
+
+**Linux:**
 ```bash
-composer install --ignore-platform-reqs
+sudo ufw allow 8000/tcp
 ```
 
-### Migration Errors
+## 📁 Struktur Folder Penting
+
+```
+website-laundry-crm/
+├── app/
+│   ├── Http/
+│   │   └── Controllers/
+│   │       ├── DashboardController.php      # Dashboard & statistik
+│   │       ├── OrderController.php          # CRUD Order, update status, add payment
+│   │       ├── CustomerController.php       # CRUD Customer, loyalty management
+│   │       ├── ServiceController.php        # CRUD Service/Price List
+│   │       ├── InventoryController.php      # CRUD Inventory, adjust stock
+│   │       ├── FinancialController.php      # Transactions, Expenses, Reports
+│   │       └── RewardController.php         # CRUD Rewards, redeem
+│   └── Models/
+│       ├── Order.php                        # Model Order + WhatsApp methods
+│       ├── Customer.php                     # Model Customer + loyalty
+│       ├── Service.php
+│       ├── Payment.php
+│       ├── Transaction.php                  # Income/Expense
+│       ├── Expense.php
+│       ├── InventoryItem.php
+│       ├── InventoryTransaction.php
+│       ├── LoyaltyTransaction.php
+│       ├── Reward.php
+│       └── CustomerReward.php
+├── database/
+│   ├── migrations/                          # Database schema
+│   └── seeders/
+│       ├── DatabaseSeeder.php               # Entry point seeder
+│       └── RealCaseIndonesiaSeeder.php      # Seeder data Indonesia lengkap
+├── resources/
+│   └── views/
+│       ├── dashboard.blade.php              # Halaman dashboard
+│       ├── orders/                          # Views untuk orders
+│       │   ├── index.blade.php              # List orders
+│       │   ├── show.blade.php               # Detail order (ada tombol WA)
+│       │   ├── create.blade.php
+│       │   └── edit.blade.php
+│       ├── customers/                       # Views untuk customers
+│       ├── services/                        # Views untuk services
+│       ├── inventory/                       # Views untuk inventory
+│       ├── financial/                       # Views untuk financial
+│       ├── rewards/                         # Views untuk rewards
+│       ├── layouts/
+│       │   └── app.blade.php                # Main layout
+│       └── components/
+│           └── bottom-nav.blade.php         # Bottom navigation mobile
+├── routes/
+│   └── web.php                              # Routing aplikasi
+├── .env                                     # Environment config
+└── README.md
+```
+
+## 🔧 Konvensi & Catatan Teknis
+
+### Data Statistik Dashboard
+- Revenue & Expenses dihitung dari tabel **`transactions`** (bukan dari `orders.total`)
+- Filter berdasarkan `transaction_date` sesuai periode (today, this month, last 30 days)
+- Profit = Revenue (income) - Expenses (expense)
+
+### WhatsApp Integration
+- **Tidak menggunakan WhatsApp Business API** (no webhook, no automation)
+- Menggunakan **wa.me link** (WhatsApp Click-to-Chat)
+- Template pesan otomatis generate di `Order.php` method `whatsappMessage()`
+- Format nomor: Indonesia (62xxx), otomatis convert dari 08xx
+- Button WhatsApp hanya muncul ketika `status === 'ready'`
+
+### Order Status Lifecycle
+- **In Progress**: Order baru masuk dan sedang dikerjakan
+- **Ready**: Order selesai dan siap diambil (trigger WhatsApp button)
+- **Completed**: Order telah diambil customer
+- **Cancelled**: Order dibatalkan
+
+### Payment & Transaction Flow
+1. Order dibuat → status pembayaran: **pending**
+2. Staff add payment → status: **partial** atau **paid**
+3. Saat payment dibuat → otomatis create **Transaction** dengan type=**income**
+4. Transaksi ini yang dipakai untuk hitung revenue di dashboard
+
+### Inventory Usage
+- Setiap order yang completed, sistem bisa otomatis mengurangi stok (jika diimplementasikan di seeder)
+- Inventory transaction dengan type=**usage** akan tercatat dengan reference ke order_id
+
+## 🐛 Troubleshooting
+
+### Dashboard Kosong / Statistik 0
+**Penyebab:** Tidak ada data transaksi di bulan/periode aktif
+**Solusi:**
+```bash
+php artisan migrate:fresh --seed
+```
+Seeder akan generate data transaksi 30-60 hari terakhir.
+
+### WhatsApp Template Karakter Aneh
+**Penyebab:** Encoding UTF-8 atau emoji tidak support
+**Solusi:** Template di `Order.php` sudah menggunakan plain text tanpa emoji. Pastikan tidak ada karakter special yang corrupt.
+
+### Error "Column not found" saat migrate
+**Penyebab:** Migration atau seeder tidak sinkron dengan model
+**Solusi:**
 ```bash
 php artisan migrate:fresh --seed
 ```
 
-## Support & Contribution
+### Port 8000 Already in Use
+**Solusi:** Gunakan port lain
+```bash
+php artisan serve --port=8001
+```
 
-### Reporting Issues
-Please report issues with:
-- Laravel version
-- PHP version
-- Error message
-- Steps to reproduce
+### Tidak Bisa Akses dari HP
+**Penyebab:** Firewall blocking atau IP salah
+**Solusi:**
+1. Pastikan HP dan laptop terhubung ke Wi-Fi yang sama
+2. Cek IP laptop dengan `ipconfig` (Windows) atau `ifconfig` (Linux/Mac)
+3. Allow port 8000 di firewall
+4. Test akses: `http://IP-LAPTOP:8000`
 
-### Future Enhancements
-- SMS notifications for order updates
-- Email receipts and invoices
-- Barcode scanning for inventory
-- Mobile app integration
-- Advanced reporting with charts
-- Multi-location support
-- Employee management
-- Customer portal
-- Automated billing
+## 📱 Mobile Responsiveness
 
-## License
+Aplikasi ini **fully responsive** dengan bottom navigation untuk mobile view:
+- **Dashboard**: Statistik dan overview
+- **Orderan**: Daftar semua order
+- **Proses**: Filter order status in_progress
+- **Siap Ambil**: Filter order status ready
+- **Pelanggan**: Daftar customer
 
-This project is open-source software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Layout otomatis menyesuaikan untuk tampilan desktop dan mobile.
 
-## Credits
+## 🔐 Security Notes
 
-Developed as a comprehensive CRM and management solution for small to medium laundry businesses.
+- Password di-hash menggunakan bcrypt (Laravel default)
+- CSRF protection enabled untuk semua POST requests
+- SQL Injection protection via Eloquent ORM
+- **Catatan:** Aplikasi ini untuk internal staff, belum ada role-based access control (RBAC) yang ketat
+- Untuk production: Implementasikan authentication middleware dan authorization policies
 
-**Technologies Used:**
-- Laravel Framework
-- Tailwind CSS
-- Font Awesome
-- MySQL/PostgreSQL
+## 📄 License
+
+Project ini dibuat untuk keperluan capstone/akademik. Silakan modifikasi sesuai kebutuhan.
+
+## 🤝 Kontribusi
+
+Jika ingin menambahkan fitur atau perbaikan:
+1. Fork repository
+2. Buat branch baru (`git checkout -b feature/nama-fitur`)
+3. Commit perubahan (`git commit -m 'Tambah fitur X'`)
+4. Push ke branch (`git push origin feature/nama-fitur`)
+5. Buat Pull Request
+
+## 📞 Support
+
+Jika ada pertanyaan atau issue, silakan buat issue di GitHub repository atau hubungi maintainer.
 
 ---
 
-For questions or support, please refer to the Laravel documentation at https://laravel.com/docs
+**Developed with ❤️ from DeBeDe Team**
