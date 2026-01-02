@@ -14,11 +14,24 @@ class DashboardController extends Controller
     /**
      * Display the dashboard.
      */
-    public function index()
+    public function index(Request $request)
     {
+        // Get date range from request or use defaults
+        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->format('Y-m-d'));
+        
+        // Validate dates
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $request->validate([
+                'start_date' => 'required|date|before_or_equal:today',
+                'end_date' => 'required|date|after_or_equal:start_date|before_or_equal:today',
+            ]);
+        }
+
         // Today's statistics
         $todayStats = [
             'orders' => Order::whereDate('created_at', today())->count(),
+            'deadline_today' => Order::whereDate('delivery_date', today())->count(),
             'revenue' => Transaction::where('type', 'income')
                                    ->whereDate('transaction_date', today())
                                    ->sum('amount'),
@@ -30,48 +43,32 @@ class DashboardController extends Controller
                                        ->sum(DB::raw('total - paid_amount')),
         ];
 
-        // This month's statistics
+        // Statistics for selected date range
         $monthStats = [
-            'orders' => Order::whereMonth('created_at', now()->month)
-                           ->whereYear('created_at', now()->year)
-                           ->count(),
+            'orders' => Order::whereBetween('created_at', [$startDate, $endDate . ' 23:59:59'])->count(),
             'revenue' => Transaction::where('type', 'income')
-                                   ->whereMonth('transaction_date', now()->month)
-                                   ->whereYear('transaction_date', now()->year)
+                                   ->whereBetween('transaction_date', [$startDate, $endDate])
                                    ->sum('amount'),
             'expenses' => Transaction::where('type', 'expense')
-                                    ->whereMonth('transaction_date', now()->month)
-                                    ->whereYear('transaction_date', now()->year)
+                                    ->whereBetween('transaction_date', [$startDate, $endDate])
                                     ->sum('amount'),
-            'new_customers' => Customer::whereMonth('created_at', now()->month)
-                                      ->whereYear('created_at', now()->year)
-                                      ->count(),
+            'new_customers' => Customer::whereBetween('created_at', [$startDate, $endDate . ' 23:59:59'])->count(),
         ];
 
         //last 30 days statistics
-        $last30DaysStats = [
-            'orders' => Order::where('created_at', '>=', now()->subDays(30))->count(),
-            'revenue' => Transaction::where('type', 'income')
-                                   ->where('transaction_date', '>=', now()->subDays(30))
-                                   ->sum('amount'),
-            'expenses' => Transaction::where('type', 'expense')
-                                    ->where('transaction_date', '>=', now()->subDays(30))
-                                    ->sum('amount'),
-            'new_customers' => Customer::where('created_at', '>=', now()->subDays(30))->count(),
-        ];
-
         $monthStats['profit'] = $monthStats['revenue'] - $monthStats['expenses'];
-        $last30DaysStats['profit'] = $last30DaysStats['revenue'] - $last30DaysStats['expenses'];
         
         // Order status distribution
         $ordersByStatus = Order::select('status', DB::raw('count(*) as count'))
-            ->whereIn('status', ['received', 'washing', 'drying', 'ironing', 'ready'])
+            ->whereIn('status', ['in_progress', 'ready', 'completed', 'cancelled'])
+            ->whereBetween('created_at', [$startDate, $endDate . ' 23:59:59'])
             ->groupBy('status')
             ->get()
             ->pluck('count', 'status');
 
         // Recent orders
         $recentOrders = Order::with('customer')
+            ->whereBetween('created_at', [$startDate, $endDate . ' 23:59:59'])
             ->latest()
             ->limit(10)
             ->get();
@@ -79,6 +76,7 @@ class DashboardController extends Controller
         // Pending payments
         $pendingPayments = Order::whereIn('payment_status', ['pending', 'partial'])
             ->with('customer')
+            ->whereBetween('created_at', [$startDate, $endDate . ' 23:59:59'])
             ->orderBy('delivery_date')
             ->limit(10)
             ->get();
@@ -93,8 +91,7 @@ class DashboardController extends Controller
         $topCustomers = Customer::select('customers.id', 'customers.name', 'customers.email', 'customers.phone', 'customers.loyalty_points', DB::raw('SUM(orders.total) as total_spent'))
             ->join('orders', 'customers.id', '=', 'orders.customer_id')
             ->where('orders.payment_status', 'paid')
-            ->whereMonth('orders.created_at', now()->month)
-            ->whereYear('orders.created_at', now()->year)
+            ->whereBetween('orders.created_at', [$startDate, $endDate . ' 23:59:59'])
             ->groupBy('customers.id', 'customers.name', 'customers.email', 'customers.phone', 'customers.loyalty_points')
             ->orderBy('total_spent', 'desc')
             ->limit(5)
@@ -102,7 +99,7 @@ class DashboardController extends Controller
 
         // Revenue trend (last 7 days)
         $revenueTrend = Transaction::where('type', 'income')
-            ->where('transaction_date', '>=', now()->subDays(7))
+            ->whereBetween('transaction_date', [$startDate, $endDate . ' 23:59:59'])
             ->select(DB::raw('DATE(transaction_date) as date'), DB::raw('SUM(amount) as total'))
             ->groupBy('date')
             ->orderBy('date')
@@ -111,20 +108,22 @@ class DashboardController extends Controller
         // Overdue orders
         $overdueOrders = Order::where('delivery_date', '<', now())
             ->whereNotIn('status', ['completed', 'cancelled'])
+            ->whereBetween('created_at', [$startDate, $endDate . ' 23:59:59'])
             ->with('customer')
             ->count();
 
         return view('dashboard', compact(
             'todayStats',
             'monthStats',
-            'last30DaysStats',
             'ordersByStatus',
             'recentOrders',
             'pendingPayments',
             'lowStockItems',
             'topCustomers',
             'revenueTrend',
-            'overdueOrders'
+            'overdueOrders',
+            'startDate',
+            'endDate'
         ));
     }
 }

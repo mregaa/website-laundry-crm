@@ -70,9 +70,10 @@
                             <span class="px-3 py-1 rounded-full text-sm
                                 @if($order->payment_status === 'paid') bg-green-100 text-green-800
                                 @elseif($order->payment_status === 'partial') bg-yellow-100 text-yellow-800
+                                @elseif($order->payment_status === 'refunded') bg-purple-100 text-purple-800
                                 @else bg-red-100 text-red-800
                                 @endif">
-                                {{ ucfirst($order->payment_status) }}
+                                {{ statusLabel($order->payment_status, 'payment') }}
                             </span>
                         </p>
                     </div>

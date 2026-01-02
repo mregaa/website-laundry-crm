@@ -74,7 +74,7 @@
                     </div>
                     <div>
                         <p class="text-gray-600">Total Belanja</p>
-                        <p class="text-xl font-semibold">${{ number_format($customer->totalSpent(), 2) }}</p>
+                        <p class="text-xl font-semibold">Rp {{ number_format($customer->totalSpent(), 2) }}</p>
                     </div>
                     <div>
                         <p class="text-gray-600">Total Pesanan</p>
@@ -105,7 +105,7 @@
                                 </span>
                             </div>
                             <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-300">
-                                <p class="text-lg font-bold">${{ number_format($order->total, 2) }}</p>
+                                <p class="text-lg font-bold">Rp {{ number_format($order->total, 2) }}</p>
                                 <a href="{{ route('orders.show', $order) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm">
                                     <i class="fas fa-eye"></i> Lihat
                                 </a>
@@ -145,7 +145,7 @@
                                             {{ ucfirst($order->status) }}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-3 text-right font-semibold">${{ number_format($order->total, 2) }}</td>
+                                    <td class="px-4 py-3 text-right font-semibold">Rp {{ number_format($order->total, 2) }}</td>
                                     <td class="px-4 py-3 text-center">
                                         <a href="{{ route('orders.show', $order) }}" class="text-blue-500 hover:text-blue-700">
                                             <i class="fas fa-eye"></i>

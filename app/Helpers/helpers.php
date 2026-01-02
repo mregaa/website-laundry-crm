@@ -28,9 +28,10 @@ if (!function_exists('statusLabel')) {
                 'cancelled' => 'Dibatalkan',
             ],
             'payment' => [
-                'pending' => 'Tertunda',
+                'pending' => 'Belum Dibayar',
                 'partial' => 'Sebagian',
                 'paid' => 'Lunas',
+                'refunded' => 'Dikembalikan',
             ],
             'transaction' => [
                 'income' => 'Pendapatan',

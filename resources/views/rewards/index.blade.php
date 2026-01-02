@@ -42,7 +42,7 @@
                 @if($reward->discount_amount)
                 <div class="flex items-center justify-between bg-green-50 rounded p-3">
                     <span class="text-sm text-gray-700">Discount Jumlah:</span>
-                    <span class="text-lg font-bold text-green-600">${{ number_format($reward->discount_amount, 2) }}</span>
+                    <span class="text-lg font-bold text-green-600">Rp {{ number_format($reward->discount_amount, 2) }}</span>
                 </div>
                 @endif
 

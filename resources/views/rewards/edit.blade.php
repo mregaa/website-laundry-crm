@@ -45,7 +45,7 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-gray-700 mb-2">Discount Jumlah ($)</label>
+                            <label class="block text-gray-700 mb-2">Discount Jumlah (Rp)</label>
                             <input type="number" name="discount_amount" step="0.01" min="0" 
                                    value="{{ old('discount_amount', $reward->discount_amount) }}" 
                                    class="w-full border rounded px-3 py-2">

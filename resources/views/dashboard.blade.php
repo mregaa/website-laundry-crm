@@ -22,11 +22,11 @@
         <h2 class="text-lg font-semibold text-gray-700 mb-3">Statistik Hari Ini</h2>
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             <x-card 
-                title="Order Hari Ini"
-                :value="$todayStats['orders']"
-                icon="fas fa-box"
-                iconBg="bg-blue-100"
-                iconColor="text-blue-600"
+                title="Deadline Hari Ini"
+                :value="$todayStats['deadline_today']"
+                icon="fas fa-calendar-alt"
+                iconBg="bg-red-100"
+                iconColor="text-red-600"
                 href="{{ route('orders.index') }}"
             />
 
@@ -43,8 +43,8 @@
                 title="Siap Diambil"
                 :value="$ordersByStatus->get('ready', 0)"
                 icon="fas fa-box-open"
-                iconBg="bg-green-100"
-                iconColor="text-green-600"
+                iconBg="bg-blue-100"
+                iconColor="text-blue-600"
                 href="{{ route('orders.index', ['status' => 'ready']) }}"
             />
 
@@ -61,29 +61,60 @@
 
     <!-- Monthly Stats -->
     <div>
-        <h2 class="text-lg font-semibold text-gray-700 mb-3">Statistik Bulan Ini</h2>
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-3">
+            <h2 class="text-lg font-semibold text-gray-700">Statistik Periode</h2>
+            
+            <!-- Date Range Filter -->
+            <form method="GET" action="{{ route('dashboard') }}" class="flex flex-wrap items-center gap-2">
+                <div class="flex items-center gap-2">
+                    <input type="date" 
+                           name="start_date" 
+                           value="{{ $startDate }}" 
+                           max="{{ date('Y-m-d') }}"
+                           class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    
+                    <span class="text-gray-500 text-sm">s/d</span>
+                    
+                    <input type="date" 
+                           name="end_date" 
+                           value="{{ $endDate }}" 
+                           max="{{ date('Y-m-d') }}"
+                           class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div class="flex gap-2">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap">
+                        <i class="fas fa-filter mr-1"></i>Terapkan
+                    </button>
+                    <a href="{{ route('dashboard') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap">
+                        <i class="fas fa-redo mr-1"></i>Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+        
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-md p-5 text-white">
                 <p class="text-blue-100 text-sm mb-2">Total Order</p>
-                <p class="text-3xl font-bold">{{ $last30DaysStats['orders'] }}</p>
-                <p class="text-xs text-blue-200 mt-2">Bulan ini</p>
+                <p class="text-3xl font-bold">{{ $monthStats['orders'] }}</p>
+                <p class="text-xs text-blue-200 mt-2">{{ \Carbon\Carbon::parse($startDate)->format('d M') }} - {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}</p>
             </div>
 
             <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-md p-5 text-white">
                 <p class="text-green-100 text-sm mb-2">Pendapatan</p>
-                <p class="text-2xl font-bold">{{ rupiah($last30DaysStats['revenue']) }}</p>
+                <p class="text-2xl font-bold">{{ rupiah($monthStats['revenue']) }}</p>
                 <p class="text-xs text-green-200 mt-2">Total pemasukan</p>
             </div>
 
             <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-md p-5 text-white">
                 <p class="text-red-100 text-sm mb-2">Pengeluaran</p>
-                <p class="text-2xl font-bold">{{ rupiah($last30DaysStats['expenses']) }}</p>
+                <p class="text-2xl font-bold">{{ rupiah($monthStats['expenses']) }}</p>
                 <p class="text-xs text-red-200 mt-2">Total biaya</p>
             </div>
 
             <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-md p-5 text-white">
                 <p class="text-purple-100 text-sm mb-2">Keuntungan</p>
-                <p class="text-2xl font-bold">{{ rupiah($last30DaysStats['profit']) }}</p>
+                <p class="text-2xl font-bold">{{ rupiah($monthStats['profit']) }}</p>
                 <p class="text-xs text-purple-200 mt-2">Laba bersih</p>
             </div>
         </div>
@@ -186,6 +217,7 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50 sticky top-0">
                     <tr>
+                        <th class="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Tanggal Order</th>
                         <th class="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">No. Order</th>
                         <th class="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Pelanggan</th>
                         <th class="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
@@ -196,6 +228,9 @@
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($recentOrders as $order)
                         <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 md:px-6 py-3 md:py-4 whitespace-nowrap text-sm text-gray-600">
+                                {{ $order->created_at->format('d M Y') ?? ''}}
+                            </td>
                             <td class="px-4 md:px-6 py-3 md:py-4 whitespace-nowrap">
                                 <a href="{{ route('orders.show', $order) }}" class="text-blue-600 hover:underline font-medium text-sm">
                                     {{ $order->order_number }}

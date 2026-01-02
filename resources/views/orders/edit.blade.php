@@ -89,12 +89,12 @@
                             </div>
                             <div class="text-right">
                                 <span class="text-gray-600">Harga:</span>
-                                <span class="font-semibold">${{ number_format($item->unit_price, 2) }}</span>
+                                <span class="font-semibold">Rp {{ number_format($item->unit_price, 2) }}</span>
                             </div>
                         </div>
                         <div class="mt-2 pt-2 border-t border-blue-300 text-right">
                             <span class="text-gray-600 text-sm">Subtotal:</span>
-                            <span class="font-bold text-blue-600">${{ number_format($item->subtotal, 2) }}</span>
+                            <span class="font-bold text-blue-600">Rp {{ number_format($item->subtotal, 2) }}</span>
                         </div>
                     </div>
                 @endforeach
@@ -116,8 +116,8 @@
                             <tr class="border-t hover:bg-gray-50 transition">
                                 <td class="px-4 py-3">{{ $item->service->name }}</td>
                                 <td class="px-4 py-3 text-right">{{ $item->quantity }} {{ $item->service->unit }}</td>
-                                <td class="px-4 py-3 text-right">${{ number_format($item->unit_price, 2) }}</td>
-                                <td class="px-4 py-3 text-right">${{ number_format($item->subtotal, 2) }}</td>
+                                <td class="px-4 py-3 text-right">Rp {{ number_format($item->unit_price, 2) }}</td>
+                                <td class="px-4 py-3 text-right">Rp {{ number_format($item->subtotal, 2) }}</td>
                             </tr>
                         @endforeach
                     </tbody>

@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Service;
 use App\Models\Payment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -35,7 +36,11 @@ class OrderController extends Controller
             });
         }
 
-        $orders = $query->latest()->paginate(20)->appends($request->all());
+        // Custom status ordering: in_progress -> ready -> completed -> cancelled
+        $orders = $query->latest()
+                        ->orderByRaw("FIELD(status, 'in_progress', 'ready', 'completed', 'cancelled')")
+                        ->paginate(15)
+                        ->appends($request->all());
 
         return view('orders.index', compact('orders'));
     }
@@ -217,7 +222,15 @@ class OrderController extends Controller
             return back()->with('info', 'Order is already at this status.');
         }
         
-        $order->update(['status' => $validated['status']]);
+        // If order is being cancelled, set payment_status to refunded
+        if ($validated['status'] === 'cancelled') {
+            $order->update([
+                'status' => $validated['status'],
+                'payment_status' => 'refunded',
+            ]);
+        } else {
+            $order->update(['status' => $validated['status']]);
+        }
 
         // If order is completed AND fully paid, award loyalty points
         if ($validated['status'] === 'completed' && $oldStatus !== 'completed' && $order->payment_status === 'paid') {
@@ -244,7 +257,13 @@ class OrderController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Order status updated successfully.');
+        // Customize success message based on status
+        $successMessage = 'Order status updated successfully.';
+        if ($validated['status'] === 'cancelled') {
+            $successMessage = 'Order has been cancelled. Payment status automatically set to refunded.';
+        }
+
+        return back()->with('success', $successMessage);
     }
 
     /**

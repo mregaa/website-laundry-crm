@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +8,18 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Reset all default margins and paddings */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        
         /* Custom scrollbar for sidebar */
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
@@ -30,8 +42,8 @@
     </style>
     @stack('styles')
 </head>
-<body class="bg-gray-50 font-sans antialiased">
-    <div class="flex h-screen overflow-hidden">
+<body class="h-full bg-gray-50 font-sans antialiased overflow-hidden">
+    <div class="h-full flex overflow-hidden">
         <!-- Desktop Sidebar -->
         <aside id="sidebar" class="hidden md:flex md:flex-col w-64 bg-white border-r border-gray-200 transition-all duration-300">
             <!-- Logo -->
