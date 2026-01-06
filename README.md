@@ -1,31 +1,39 @@
 # Website Laundry CRM
 
-Aplikasi web berbasis Laravel untuk mengelola operasional bisnis laundry secara menyeluruh, mencakup manajemen order, customer, keuangan, inventory, dan program loyalitas.
+Aplikasi web berbasis Laravel untuk mengelola operasional bisnis laundry secara menyeluruh, mencakup manajemen order, customer, keuangan, dan program loyalitas.
 
 ## 📋 Gambaran Aplikasi
 
-Aplikasi ini dirancang untuk membantu pemilik dan staff laundry dalam mengelola operasional bisnis sehari-hari, mulai dari pencatatan order, tracking status laundry, notifikasi WhatsApp ke customer, pencatatan keuangan (pemasukan & pengeluaran), manajemen inventory, hingga program loyalitas pelanggan.
+Aplikasi ini dirancang untuk membantu pemilik dan staff laundry dalam mengelola operasional bisnis sehari-hari, mulai dari pencatatan order, tracking status laundry, notifikasi WhatsApp ke customer, pencatatan keuangan (pemasukan & pengeluaran), hingga program loyalitas pelanggan.
 
-**Role Pengguna:**
-- **Admin/Owner**: Akses penuh ke semua fitur termasuk laporan keuangan dan manajemen data master
-- **Staff/Kasir**: Fokus pada operasional harian seperti input order, update status, dan pembayaran
+**Tampilan Website:**
+- **Desktop**: Akses penuh ke semua fitur termasuk laporan keuangan dan manajemen data master
+- **Mobile**: Fokus pada operasional harian seperti input order, update status, pembayaran, dan pendataan customer baru
 
 ## ✨ Fitur Utama
 
 ### 1. Dashboard Statistik
-- **Statistik Hari Ini**: Total order, revenue, order selesai, pembayaran pending
-- **Statistik Bulan Ini**: Total order, revenue, expenses, profit, customer baru
-- **Statistik 30 Hari Terakhir**: Tren order, revenue, expenses, dan profit
-- **Order Status Distribution**: Visualisasi order berdasarkan status
-- **Recent Orders**: Daftar 10 order terbaru
-- **Pending Payments**: Order dengan pembayaran belum lunas
-- **Low Stock Alert**: Item inventory yang stoknya menipis
-- **Top Customers**: 5 pelanggan dengan transaksi terbesar bulan ini
+**Statistik Hari Ini**
+- **Deadline Hari Ini**: jumlah order dengan `delivery_date` hari ini
+- **Sedang Diproses**: jumlah order berstatus `in_progress`
+- **Siap Diambil**: jumlah order berstatus `ready`
+- **Pendapatan Hari Ini**: total pemasukan (berdasarkan data transaksi pemasukan)
+
+**Statistik Periode (dengan filter tanggal)**
+Dashboard mendukung filter rentang tanggal `start_date` s/d `end_date`, dan menampilkan:
+- **Total Order** (pada periode)
+- **Pendapatan** (total pemasukan pada periode)
+- **Pengeluaran** (total biaya pada periode)
+- **Keuntungan** (Pendapatan − Pengeluaran)
+
+- **Ringkasan Status Order**: jumlah order per status (in_progress, ready, completed, cancelled)
+- **Recent Orders**: daftar order terbaru
+- **Top Customers**: ringkasan pelanggan dengan nilai transaksi tertinggi pada periode (jika tersedia)
 
 ### 2. Manajemen Order Laundry
 - **Create Order**: Buat order baru dengan multiple service items
 - **Order Tracking**: Pencarian order berdasarkan nomor order atau nama customer
-- **Status Order Disederhanakan** (Major Stages):
+- **Status Order**:
   - **In Progress**: Order sedang dikerjakan (mencakup proses cuci, keringkan, setrika, dll)
   - **Ready**: Order siap diambil customer ✅
   - **Completed**: Order telah diambil dan selesai
@@ -40,7 +48,7 @@ Aplikasi ini dirancang untuk membantu pemilik dan staff laundry dalam mengelola 
   - Tambah pembayaran dengan berbagai metode (Cash, Transfer, E-wallet)
   - Histori pembayaran per order
 - **Order Status History**: Catat setiap perubahan status dengan timestamp dan user
-- **Express Service**: Opsi layanan kilat (jika diaktifkan)
+- **Express Service**: Dukungan layanan kilat sesuai konfigurasi layanan
 - **Auto-Generated Order Number**: Format ORD-YYYYMMDD-XXXX
 
 ### 3. Manajemen Customer & Loyalty
@@ -58,18 +66,7 @@ Aplikasi ini dirancang untuk membantu pemilik dan staff laundry dalam mengelola 
 - **Estimated Time**: Durasi estimasi pengerjaan (dalam menit)
 - **Service Status**: Aktif/Non-aktif untuk ditampilkan di order form
 
-### 5. Manajemen Inventory
-- **Inventory Items**: Catat stok bahan operasional (detergent, softener, bleach, plastic bags, hangers, dll)
-- **Kategori**: Detergent, Fabric Softener, Bleach, Starch, Hangers, Bags, Other
-- **Stock Management**: Quantity, satuan (kg/L/pcs), reorder level, supplier
-- **Inventory Transactions**: 
-  - **Stock In**: Pembelian atau penambahan stok
-  - **Stock Out**: Pengurangan stok manual
-  - **Usage**: Pemakaian untuk order (otomatis)
-  - **Adjustment**: Koreksi stok
-- **Low Stock Alert**: Notifikasi di dashboard jika stok <= reorder level
-
-### 6. Manajemen Keuangan (Financial)
+### 5. Manajemen Keuangan (Financial)
 - **Transactions**: 
   - **Income**: Transaksi pemasukan (otomatis dari pembayaran order)
   - **Expense**: Transaksi pengeluaran
@@ -81,10 +78,10 @@ Aplikasi ini dirancang untuk membantu pemilik dan staff laundry dalam mengelola 
   - Expense Number: EXP-YYYYMMDD-XXXX
 - **Financial Reports**:
   - Filter berdasarkan periode (tanggal mulai - tanggal akhir)
-  - Revenue, Expenses, Profit/Loss
-  - Export ke Excel/PDF (jika tersedia)
+  - Revenue, Expenses, Profit/Loss, Pending Payments
+  - Export ke Excel
 
-### 7. Program Rewards (Loyalty)
+### 6. Program Rewards (Loyalty)
 - **Reward Catalog**: Daftar reward yang bisa ditukar dengan poin
 - **Points Required**: Minimal poin untuk redeem
 - **Reward Value**: Nilai diskon dalam rupiah
@@ -194,8 +191,6 @@ php artisan migrate:fresh --seed
 - 32 Payments
 - 40 Transactions (income & expense)
 - 12 Expenses (PLN, PDAM, Gaji, dll)
-- 12 Inventory Items (Detergent, Softener, Bags, dll)
-- 57 Inventory Transactions
 - 16 Loyalty Transactions
 - 10 Customer Rewards
 - 6 Rewards
@@ -274,7 +269,6 @@ website-laundry-crm/
 │   │       ├── OrderController.php          # CRUD Order, update status, add payment
 │   │       ├── CustomerController.php       # CRUD Customer, loyalty management
 │   │       ├── ServiceController.php        # CRUD Service/Price List
-│   │       ├── InventoryController.php      # CRUD Inventory, adjust stock
 │   │       ├── FinancialController.php      # Transactions, Expenses, Reports
 │   │       └── RewardController.php         # CRUD Rewards, redeem
 │   └── Models/
@@ -284,8 +278,6 @@ website-laundry-crm/
 │       ├── Payment.php
 │       ├── Transaction.php                  # Income/Expense
 │       ├── Expense.php
-│       ├── InventoryItem.php
-│       ├── InventoryTransaction.php
 │       ├── LoyaltyTransaction.php
 │       ├── Reward.php
 │       └── CustomerReward.php
@@ -304,7 +296,6 @@ website-laundry-crm/
 │       │   └── edit.blade.php
 │       ├── customers/                       # Views untuk customers
 │       ├── services/                        # Views untuk services
-│       ├── inventory/                       # Views untuk inventory
 │       ├── financial/                       # Views untuk financial
 │       ├── rewards/                         # Views untuk rewards
 │       ├── layouts/
@@ -342,10 +333,6 @@ website-laundry-crm/
 2. Staff add payment → status: **partial** atau **paid**
 3. Saat payment dibuat → otomatis create **Transaction** dengan type=**income**
 4. Transaksi ini yang dipakai untuk hitung revenue di dashboard
-
-### Inventory Usage
-- Setiap order yang completed, sistem bisa otomatis mengurangi stok (jika diimplementasikan di seeder)
-- Inventory transaction dengan type=**usage** akan tercatat dengan reference ke order_id
 
 ## 🐛 Troubleshooting
 
@@ -395,29 +382,13 @@ Layout otomatis menyesuaikan untuk tampilan desktop dan mobile.
 
 ## 🔐 Security Notes
 
-- Password di-hash menggunakan bcrypt (Laravel default)
 - CSRF protection enabled untuk semua POST requests
 - SQL Injection protection via Eloquent ORM
-- **Catatan:** Aplikasi ini untuk internal staff, belum ada role-based access control (RBAC) yang ketat
+- **Catatan:** Aplikasi ini untuk internal staff, kontrol akses masih bersifat sederhana dan dapat dikembangkan lebih lanjut.
 - Untuk production: Implementasikan authentication middleware dan authorization policies
 
 ## 📄 License
 
-Project ini dibuat untuk keperluan capstone/akademik. Silakan modifikasi sesuai kebutuhan.
-
-## 🤝 Kontribusi
-
-Jika ingin menambahkan fitur atau perbaikan:
-1. Fork repository
-2. Buat branch baru (`git checkout -b feature/nama-fitur`)
-3. Commit perubahan (`git commit -m 'Tambah fitur X'`)
-4. Push ke branch (`git push origin feature/nama-fitur`)
-5. Buat Pull Request
-
-## 📞 Support
-
-Jika ada pertanyaan atau issue, silakan buat issue di GitHub repository atau hubungi maintainer.
-
----
+Project ini dibuat untuk keperluan capstone/akademik.
 
 **Developed with ❤️ from DeBeDe Team**
